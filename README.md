@@ -35,14 +35,14 @@ export TURTLEBOT3_MODEL=waffle_pi
 
 # Source the necessary ROS setup files on the robot
 source /opt/ros/humble/setup.bash
-source ~/temp_tb3_ws/install/setup.bash
+source ~/turtlebot3_ws/install/setup.bash
 
 ```
 
 3. __Launch Robot Bringup__: Run the low-level node to enable motor and sensor communication:
 
 ```bash
-ros2 launch turtlebot3_node robot.launch.py
+ros2 launch turtlebot3_bringup robot.launch.py
 ```
 
 ## Running project instructions
