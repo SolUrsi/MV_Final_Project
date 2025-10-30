@@ -173,8 +173,7 @@ class GestureDetector(Node):
                         direction = self.detect_commands(hand_landmarks)
                         dir_maj_window.append(direction)
 
-                        if len(dir_maj_window) > 0:
-                            direction = Counter(dir_maj_window).most_common(1)[0][0]
+                        direction = Counter(dir_maj_window).most_common(1)[0][0]
 
                         if direction == Direction.FORWARD:
                             vel_msg.linear.x = 0.15
