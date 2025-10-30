@@ -171,10 +171,10 @@ class GestureDetector(Node):
                         cv2.circle(frame, (center_x, center_y), 5, (0, 0, 255), -1)
                     elif handedness == "Left":
                         direction = self.detect_commands(hand_landmarks)
-                        direction_smoothed = Counter(dir_maj_window).most_common(1)[0][0] if len(dir_maj_window) > 0 else direction
-
                         dir_maj_window.append(direction)
-                        direction = direction_smoothed
+
+                        if len(dir_maj_window) > 0:
+                            direction = Counter(dir_maj_window).most_common(1)[0][0]
 
                         if direction == Direction.FORWARD:
                             vel_msg.linear.x = 0.15
