@@ -15,6 +15,7 @@
 
     <depend>control_msgs</depend>
     <depend>gesturebot_msgs</depend>
+    <depend>libfmt-dev</depend>
     <depend>moveit_ros_planning_interface</depend>
     <depend>rclcpp</depend>
     <depend>std_msgs</depend>

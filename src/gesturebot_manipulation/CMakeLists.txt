@@ -9,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(ament_cmake REQUIRED)
 find_package(control_msgs REQUIRED)
+find_package(fmt REQUIRED)
 find_package(gesturebot_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -26,10 +27,20 @@ ament_target_dependencies(manipulation_handler
     tf2
     tf2_geometry_msgs
 )
+target_link_libraries(manipulation_handler fmt::fmt)
+install(TARGETS manipulation_handler DESTINATION lib/${PROJECT_NAME})
 
-install(TARGETS
-  manipulation_handler
-  DESTINATION lib/${PROJECT_NAME})
+add_executable(test_node src/test_node.cpp)
+ament_target_dependencies(test_node 
+    control_msgs
+    gesturebot_msgs
+    moveit_ros_planning_interface
+    rclcpp 
+    std_msgs 
+    tf2
+    tf2_geometry_msgs
+)
+install(TARGETS test_node DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
