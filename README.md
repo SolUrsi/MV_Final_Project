@@ -42,7 +42,7 @@ source ~/turtlebot3_ws/install/setup.bash
 3. __Launch Robot Bringup__: Run the low-level node to enable motor and sensor communication:
 
 ```bash
-ros2 launch turtlebot3_bringup robot.launch.py
+ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
 ```
 
 ## Running project instructions
