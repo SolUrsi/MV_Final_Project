@@ -19,8 +19,7 @@ services:
     # Assumes the ROS2 workspace is in a folder named 'gesturebot_ws' next to our Dockerfile. If not we must make it.
     volumes:
       - ./gesturebot_ws:/home/robo/gesturebot_ws
-      # We need to change this!!
-      # TODO 
+   
 
       # Set environment variables here:
     environment:
