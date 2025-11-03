@@ -29,6 +29,9 @@ services:
       # This is crucial for running GUI applications like Gazebo or RViz from the container
       - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
+      # Force UDP traffic
+      - FASTDDS_BUILTIN_TRANSPORTS=UDPv4 
+      - DISPLAY=${DISPLAY}
 
     # Keep the container running in the background
     # The 'command' overrides the Dockerfile's CMD. We'll start a long-running process
