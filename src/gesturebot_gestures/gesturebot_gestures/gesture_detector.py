@@ -15,6 +15,7 @@ class Direction(Enum):
     LEFT = 2
     RIGHT = 3
     NONE = 4
+    BACKWARD = 5
 
 class GestureDetector(Node):
 
@@ -89,6 +90,8 @@ class GestureDetector(Node):
             direction = Direction.LEFT
         elif fingers == [1, 0, 0, 0, 0]:
             direction = Direction.RIGHT
+        elif fingers == [0, 1, 1, 0, 0]:
+            direction == Direction.BACKWARD
 
         return direction
 
@@ -183,6 +186,8 @@ class GestureDetector(Node):
                             vel_msg.angular.z = 0.5
                         elif direction == Direction.RIGHT:
                             vel_msg.angular.z = -0.5
+                        elif direction == Direction.BACKWARD:
+                            vel_msg.linear.x = -0.15
                     else:
                         pass
 
