@@ -1,9 +1,9 @@
 
-# GestureBot ROS 2 Project (test)
+# GestureBot ROS 2 Project 
 
 This project utilizes ROS 2 Humble within a Docker container to host a gesture detection node that controls a simulated or physical TurtleBot3 Waffle Pi robot (hopefully).
 
-## Prerequisites
+## Prerequisites :shipit:
 
 1. __Docker & Docker Compose__: Must be installed and running on your host machine.
 
@@ -45,7 +45,7 @@ source ~/turtlebot3_ws/install/setup.bash
 ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
 ```
 
-## Running project instructions
+## Running project instructions ✔️
 
 1. ```bash
     # cd into the cloned repo
@@ -64,7 +64,7 @@ ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
 
 3. This command is used to run a specific command inside a running container managed by Docker Compose. This activates an interactive shell from within the running container which can run ROS2 commands. 
 
-## Run commands from project Docker Image 
+## Run commands from project Docker Image 🤖 
 
 ```bash
 # make sure that you're in ~/gesturebot_ws/ when running these commands
@@ -81,21 +81,20 @@ ros2 run gesture_detector gesture_detector
 
 This will start the actual python script and (hopefully) open your webcam. Enjoy! See the report for the gesture mapping!
 
-### Problems? 
+### Problems? ✖️
 
 If you're running the application through WSL or other virtual machine or environments, make sure the webcam is exposed to the application!
 
 - ___WSL2___: Make sure to expose the webcam to WSL by following the steps in this link: [USBIPD](https://learn.microsoft.com/en-us/windows/wsl/connect-usb).
 
-Currently it's not possible to run this application through WSL2 likely due to V4L2 driver issues. Please utilize a Ubuntu 22.04 LTS computer to run the program!
-### Gestures? Link to pdf in repository docs??
+Currently it's not possible to run this application through WSL2 likely due to V4L2 driver issues. Please utilize a Ubuntu 22.04 LTS computer to run the program! ❗
 
 ## Finished?
 
 Simply run the following to shut down the container:
 
 ```bash
-# make sure to exit the container shell using ctrl+d before running this
+# make sure to exit the container shell using `ctrl+d` or typing `exit`
 sudo docker compose down
 ```
 
