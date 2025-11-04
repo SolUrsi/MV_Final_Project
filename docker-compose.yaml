@@ -23,7 +23,7 @@ services:
 
       # Set environment variables here:
     environment:
-      - ROS_DOMAIN_ID=30
+      - ROS_DOMAIN_ID=31
       - TURTLEBOT3_MODEL=waffle_pi
       # This is crucial for running GUI applications like Gazebo or RViz from the container
       - DISPLAY=${DISPLAY}
