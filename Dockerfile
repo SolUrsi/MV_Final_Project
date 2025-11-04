@@ -4,7 +4,7 @@ SHELL ["/bin/bash", "-c"]
 
 ARG USERNAME=robo
 
-ENV ROS_DOMAIN_ID=31
+ENV ROS_DOMAIN_ID=30
 ENV TURTLEBOT3_MODEL=waffle_pi
 # ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
@@ -100,6 +100,7 @@ RUN echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc
 WORKDIR /home/$USERNAME/$PROJECT_PATH
 
 CMD /bin/bash -c "cd ~/$PROJECT_PATH && rosdep init ; rosdep update && rosdep install --from-paths src -i -y && colcon build --symlink-install ; source install/setup.bash ; /bin/bash -i"
+
 
 
 
