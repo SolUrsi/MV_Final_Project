@@ -100,10 +100,3 @@ RUN echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc
 WORKDIR /home/$USERNAME/$PROJECT_PATH
 
 CMD /bin/bash -c "cd ~/$PROJECT_PATH && rosdep init ; rosdep update && rosdep install --from-paths src -i -y && colcon build --symlink-install ; source install/setup.bash ; /bin/bash -i"
-
-
-
-
-
-
-
