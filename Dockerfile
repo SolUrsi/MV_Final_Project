@@ -34,6 +34,7 @@ RUN apt install x11-utils -y
 RUN apt install mesa-utils -y
 RUN apt install python3-pip -y
 RUN apt install git -y
+RUN apt install python3-opencv -y
 
 # User
 

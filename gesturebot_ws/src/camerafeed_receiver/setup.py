@@ -18,9 +18,7 @@ setup(
     description='ROS 2 package to subscribe to a compressed camera feed and display it using OpenCV.',
     license='TODO: License declaration',
     tests_require=['pytest'],
-    entry_points={
-        'console_scripts': [
-            'feed_receiver = camerafeed_receiver.feed:main',
-        ],
-    },
+    scripts=[
+        'camerafeed_receiver/camerafeed_receiver.py',
+    ],
 )
