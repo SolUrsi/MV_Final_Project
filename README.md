@@ -28,7 +28,7 @@ To control the physical robot, the TurtleBot3's Single Board Computer (SBC) must
 
 ```bash
 # Set the same communication channel as the Docker container
-export ROS_DOMAIN_ID=30
+export ROS_DOMAIN_ID=31
 
 # Set the same TurtleBot3 type as the Docker container
 export TURTLEBOT3_MODEL=waffle_pi
@@ -37,6 +37,8 @@ export TURTLEBOT3_MODEL=waffle_pi
 source /opt/ros/humble/setup.bash
 source ~/turtlebot3_ws/install/setup.bash
 
+# Remember to disable the firewall to allow UDP packets
+sudo ufw disable
 ```
 
 3. __Launch Robot Bringup__: Run the low-level node to enable motor and sensor communication:
@@ -53,6 +55,9 @@ ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
     # build and start container
     # !!! BUILDING THE CONTAINER IS VERY RESOURCE HEAVY AND THIS MIGHT HAVE TO BE THE ONLY THING RUNNING DEPENDING ON YOUR DEVICE OR IT WILL FREEZE (this can later be improved by removing simulation packages from the release) !!!
     sudo docker compose build && sudo docker compose up -d
+
+    # Remember to disable the firewall to allow UDP packets to be sent
+    sudo ufw disable
     ```
 2. ```bash
     sudo docker compose exec gesturebot bash
