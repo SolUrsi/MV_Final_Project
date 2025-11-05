@@ -28,7 +28,7 @@ To control the physical robot, the TurtleBot3's Single Board Computer (SBC) must
 
 ```bash
 # Set the same communication channel as the Docker container
-export ROS_DOMAIN_ID=30
+export ROS_DOMAIN_ID=31
 
 # Set the same TurtleBot3 type as the Docker container
 export TURTLEBOT3_MODEL=waffle_pi
