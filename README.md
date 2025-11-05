@@ -37,8 +37,9 @@ export TURTLEBOT3_MODEL=waffle_pi
 source /opt/ros/humble/setup.bash
 source ~/turtlebot3_ws/install/setup.bash
 
-# Remember to disable the firewall to allow UDP packets
+# Remember to disable the firewall to allow UDP packet discovery
 sudo ufw disable
+
 ```
 
 3. __Launch Robot Bringup__: Run the low-level node to enable motor and sensor communication:
