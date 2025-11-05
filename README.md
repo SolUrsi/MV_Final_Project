@@ -37,6 +37,9 @@ export TURTLEBOT3_MODEL=waffle_pi
 source /opt/ros/humble/setup.bash
 source ~/turtlebot3_ws/install/setup.bash
 
+# Remember to disable the firewall to allow UDP packet discovery
+sudo ufw disable
+
 ```
 
 3. __Launch Robot Bringup__: Run the low-level node to enable motor and sensor communication:
@@ -53,6 +56,9 @@ ros2 launch turtlebot3_bringup robot.launch.py
     # build and start container
     # !!! BUILDING THE CONTAINER IS VERY RESOURCE HEAVY AND THIS MIGHT HAVE TO BE THE ONLY THING RUNNING DEPENDING ON YOUR DEVICE OR IT WILL FREEZE (this can later be improved by removing simulation packages from the release) !!!
     sudo docker compose build && sudo docker compose up -d
+
+    # Remember to disable firewall to allow UDP packet sending
+    sudo ufw disable
     ```
 2. ```bash
     sudo docker compose exec gesturebot bash
