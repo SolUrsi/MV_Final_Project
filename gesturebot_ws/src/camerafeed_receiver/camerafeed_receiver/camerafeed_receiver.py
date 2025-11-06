@@ -39,7 +39,7 @@ def main(args=None):
 
     try:
         # Spin node to process callback function
-        sclpy.spin(camera_feed_receiver)
+        rclpy.spin(camera_feed_receiver)
     except KeyboardInterrupt:
         pass
 
@@ -48,5 +48,5 @@ def main(args=None):
     rclpy.shutdown()
     cv2.destroyAllWindows()
 
-if __name__ = '__main__':
+if __name__ == '__main__':
     main()
