@@ -85,7 +85,13 @@ This will source the necessary setup scripts to allow the gesture detector to ru
 ros2 run gesture_detector gesture_detector
 ```
 
-This will start the actual python script and (hopefully) open your webcam. Enjoy! See the report for the gesture mapping!
+This will start the actual python script and (hopefully) open your webcam. To view the robots camerafeed, input the following 📷:
+
+```bash
+ros2 run camerafeed_service camerafeed_service.py
+```
+
+Enjoy! See the report for the gesture mapping!
 
 ### Problems? ✖️
 
