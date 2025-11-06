@@ -54,7 +54,9 @@ ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
     # cd into the cloned repo
     cd MV_Final_Project/
     # build and start container
-    # !!! BUILDING THE CONTAINER IS VERY RESOURCE HEAVY AND THIS MIGHT HAVE TO BE THE ONLY THING RUNNING DEPENDING ON YOUR DEVICE OR IT WILL FREEZE (this can later be improved by removing simulation packages from the release) !!!
+    # Building the container is a resource heavy process,
+    # Terminate all other programs and give the building stage time to finish
+    # After building it once a majority of packages will be cached, reducing time needed
     sudo docker compose build && sudo docker compose up -d
 
     # Remember to disable the firewall to allow UDP packets to be sent
