@@ -101,7 +101,7 @@ If you're running the application through WSL or other virtual machine or enviro
 
 - ___WSL2___: Make sure to expose the webcam to WSL by following the steps in this link: [USBIPD](https://learn.microsoft.com/en-us/windows/wsl/connect-usb).
 
-Currently it's not possible to run this application through WSL2 likely due to V4L2 driver issues. Please utilize a Ubuntu 22.04 LTS computer to run the program! ❗
+Currently it's not possible to run the webcam gesture detector through WSL2 likely due to V4L2 driver issues. Please utilize a Ubuntu 22.04 LTS computer to run the gesture detector! ❗
 
 ## Finished?
 
