@@ -26,7 +26,7 @@ class CameraFeedReceiver(Node):
         if frame is not None:
             # Display image in window
             cv2.imshow("Camerafeed", frame)
-            cv2.waitkey(1)
+            cv2.waitKey(1)
         else:
             self.get_logger().warn('Failed to decode image.')
 
