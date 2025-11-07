@@ -38,7 +38,7 @@ class CameraFeedReceiver(Node):
         self.show_no_target = False                     # keep HUD silent if no target
         self.lock_grace_s = 0.8                         # keep last box briefly on dropouts
         # --- LiDAR fusion config ---
-        self.lidar_boresight_deg = 0.0                  # camera - LiDAR alignment offset (deg)
+        self.lidar_boresight_deg = -2.5                  # camera - LiDAR alignment offset (deg)
         self.lidar_window_deg    = 3.0                  # window around angle (deg)
         self.lidar_pct           = 30                   # robust percentile
         self.last_scan           = None                 # stores latest LaserScan
