@@ -17,7 +17,7 @@ import mediapipe as mp
 
 # ================= Configuration =================
 MODEL_PATH = 'efficientdet_lite0.tflite'          # put the model file next to this script
-ALLOWLIST  = ['bottle', 'cup']                    # restrict to trash classes
+ALLOWLIST  = ['bottle']                           # restrict to trash classes
 SCORE_ON   = 0.50                                 # hysteresis ON threshold
 SCORE_OFF  = 0.35                                 # hysteresis OFF threshold
 ALPHA_EMA  = 0.25                                 # 0..1 (higher = faster update)
@@ -25,6 +25,7 @@ DEADBAND = 0.01                                   # 1% of width/height
 FOV_H_DEG  = 70.0                                 # rough FoV is fine for bearing
 GUIDE_BAND = 0.15                                 # guide corridor ±15% around image center
 CAM_INDEX  = 0                                    # default webcam
+SHOW_NO_TARGET = False                            # hide text when no target
 # =================================================
 
 # Create MediaPipe detector (VIDEO mode)
@@ -139,24 +140,44 @@ while True:
         x0 = int((cx - bw/2) * W); y0 = int((cy - bh/2) * H)
         x1 = int((cx + bw/2) * W); y1 = int((cy + bh/2) * H)
 
-        # Bearing from cx and rough FoV (no calibration needed for MVP)
+        # angle (orientation) in degrees from image center (bearing == angle)
         half_fov = math.radians(FOV_H_DEG * 0.5)
-        x_norm = (cx - 0.5) / 0.5  # [-1..1], 0 at center
-        bearing = x_norm * half_fov
+        x_norm   = (cx - 0.5) / 0.5
+        angle_rad = x_norm * half_fov
+        angle_deg = math.degrees(angle_rad)
 
+        # box color = green inside corridor, yellow otherwise
         in_corridor = (xL <= int(cx * W) <= xR)
         color = (0, 255, 0) if in_corridor else (0, 200, 255)
 
+        # draw box (no label text)
         cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
-        cv2.putText(frame, f"score={score:.2f}", (x0, max(15, y0 - 6)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
-        cv2.putText(frame, f"bearing={bearing:+.2f} rad ({math.degrees(bearing):+.1f} deg)",
-                    (10, 22), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-    else:
-        cv2.putText(frame, "no target", (10, 22),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 200, 255), 2)
 
-    cv2.imshow("Webcam Object Detection (no ROS)", frame)
+        # multi-line HUD (score, orientation, distance to object (placeholder))
+        hud_lines = [
+            "Object detected",
+            f"  - score: {score:.2f}",
+            f"  - orientation: {angle_deg:+.1f} deg",
+            f"  - distance: <placeholder> cm",
+        ]
+        y = 22
+        if in_corridor:
+            color = (0, 255, 0)
+        else:
+            color = (0, 200, 255)
+        cv2.putText(frame, "Object detected", (10, 22),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+        for line in hud_lines[1:]:
+            y += 18
+            cv2.putText(frame, line, (10, y),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
+    else:
+        # nothing printed when no target (unless you want corridor lines only)
+        if SHOW_NO_TARGET:
+            cv2.putText(frame, "no target", (10, 22),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0), 2)
+
+    cv2.imshow("Webcam Object Detection", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
