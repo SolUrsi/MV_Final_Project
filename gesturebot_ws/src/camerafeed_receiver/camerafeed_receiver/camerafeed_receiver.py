@@ -24,6 +24,7 @@ class CameraFeedReceiver(Node):
         super().__init__('camerafeed_receiver_node')
 
         # ---------------- Configuration (editable) ----------------
+        # --- Object detection config ---
         self.model_path   = 'src/camerafeed_receiver/camerafeed_receiver/efficientdet_lite0.tflite' # model file path
         self.allowlist    = ['bottle']                  # restrict to trash classes (only bottle)
         self.score_on     = 0.50                        # hysteresis ON threshold
@@ -32,10 +33,15 @@ class CameraFeedReceiver(Node):
         self.deadband     = 0.01                        # ignore <1% center movement
         self.min_bw       = 0.06                        # reject box width < 6% of frame
         self.min_bh       = 0.10                        # reject box height < 10% of frame
-        self.fov_h_deg    = 70.0                        # rough horizontal FoV (without calibration)
+        self.fov_h_deg    = 62.2                        # Raspberry Pi Camera V2 horizontal FOV in degrees
         self.guide_band   = 0.15                        # guide corridor ±15% around center
         self.show_no_target = False                     # keep HUD silent if no target
         self.lock_grace_s = 0.8                         # keep last box briefly on dropouts
+        # --- LiDAR fusion config ---
+        self.lidar_boresight_deg = 0.0                  # camera - LiDAR alignment offset (deg)
+        self.lidar_window_deg    = 3.0                  # window around angle (deg)
+        self.lidar_pct           = 30                   # robust percentile
+        self.last_scan           = None                 # stores latest LaserScan
         # -----------------------------------------------------------
 
         # Create MediaPipe detector (VIDEO mode)
@@ -93,7 +99,64 @@ class CameraFeedReceiver(Node):
         if abs(cx - px) < self.deadband: cx = px
         if abs(cy - py) < self.deadband: cy = py
         return (cx, cy, bw, bh, s)
+
+# ==============================================================================================================================
     
+    # ---------- tiny helpers (LiDAR) ----------
+    def scan_callback(self, msg: LaserScan):
+        # keep latest scan
+        self.last_scan = msg
+
+    @staticmethod
+    def _wrap_to_pi(a):
+        # normalize angle to (-pi, pi)
+        return math.atan2(math.sin(a), math.cos(a))
+    
+    def _distance_for_angle(self, angle_rad):
+        """
+        Map a target angle (rad, camera-based) to LaserScan indices and
+        return a robust distance in meters (or None if no valid data).
+        """
+        scan = self.last_scan
+        if scan is None or not scan.ranges:
+            return None
+
+        # Combine camera angle with boresight offset
+        theta = angle_rad + math.radians(self.lidar_boresight_deg)
+        # Normalize into scan's domain (usually [-pi, +pi])
+        theta = self._wrap_to_pi(theta)
+
+        a0 = scan.angle_min
+        inc = scan.angle_increment
+        N  = len(scan.ranges)
+
+        # If scan doesn’t exactly cover [-pi,pi], clamp into [a0, a0+inc*(N-1)]
+        a1 = a0 + inc*(N-1)
+        # Option 1: compute raw index, then modulo wrap
+        idx = int(round((theta - a0) / inc))
+        idx_mod = (idx % N)
+
+        # Build a small window
+        half_w = int(round(abs(self.lidar_window_deg) / math.degrees(inc)))  # in indices
+        i_min = max(0, idx_mod - half_w)
+        i_max = min(N-1, idx_mod + half_w)
+
+        # Gather valid distances
+        vals = []
+        rmin, rmax = scan.range_min, scan.range_max
+        for i in range(i_min, i_max+1):
+            r = scan.ranges[i]
+            if math.isfinite(r) and (rmin < r < rmax):
+                vals.append(r)
+
+        if not vals:
+            return None
+
+        # Robust distance (percentile)
+        vals.sort()
+        k = int(round((self.lidar_pct/100.0) * (len(vals)-1)))
+        return float(vals[k])
+
 # ==============================================================================================================================
     
     # ---------- scan callback ----------
@@ -202,6 +265,13 @@ class CameraFeedReceiver(Node):
             angle_rad = x_norm * half_fov
             angle_deg = math.degrees(angle_rad)
 
+            # --- NEW: query LiDAR distance at this angle ---
+            rng_m = self._distance_for_angle(angle_rad)  # meters or None
+            if rng_m is None:
+                dist_text = "--- cm"
+            else:
+                dist_text = f"{rng_m*100:.0f} cm"
+
             # box color: green inside corridor, yellow otherwise
             in_corridor = (xL <= int(cx * W) <= xR)
             color = (0, 255, 0) if in_corridor else (0, 200, 255)
@@ -209,12 +279,12 @@ class CameraFeedReceiver(Node):
             # draw box (no label text)
             cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
 
-            # multi-line HUD (score, orientation, distance to object (placeholder))
+            # multi-line HUD (score, orientation, distance to object)
             hud_lines = [
                 "Object detected",
                 f"  - score: {score:.2f}",
                 f"  - orientation: {angle_deg:+.1f} deg",
-                f"  - distance: <placeholder> cm",
+                f"  - distance: {dist_text}",
             ]
             y = 18
             for i, line in enumerate(hud_lines):
