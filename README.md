@@ -15,7 +15,7 @@ This project utilizes ROS 2 Humble within a Docker container to host a gesture d
     * This should already be preset as part of cloning the repository
 4. __Robot__: For physical testing the TurtleBot3 SBC (Single Board Computer), the Raspberry Pi, must be powered on and connected to the same local network as the host machine running this code.
     * Ensure ROS2 Humble is installed on the TurtleBot and that the TurtleBot ROS2 envrionments match the Docker Compose envrionments:
-        - ROS_DOMAIN_ID=31
+        - ROS_DOMAIN_ID=30
         - TURTLEBOT3_MODEL=waffle_pi
 
 ## Setting up TurtleBot3 instructions
@@ -28,7 +28,7 @@ To control the physical robot, the TurtleBot3's Single Board Computer (SBC) must
 
 ```bash
 # Set the same communication channel as the Docker container
-export ROS_DOMAIN_ID=31
+export ROS_DOMAIN_ID=30
 
 # Set the same TurtleBot3 type as the Docker container
 export TURTLEBOT3_MODEL=waffle_pi
