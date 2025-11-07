@@ -100,6 +100,8 @@ class CameraFeedReceiver(Node):
     def scan_callback(self, msg: LaserScan):
         """Simple LiDAR debug printout."""
         N = len(msg.ranges)
+
+        self.get_logger().info(N)
         # find index for 0° (front) if angle_min..angle_max covers −pi..+pi
         i0 = int(round((0.0 - msg.angle_min) / msg.angle_increment))
         if 0 <= i0 < N and math.isfinite(msg.ranges[i0]):
