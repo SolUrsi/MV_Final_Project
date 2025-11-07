@@ -12,6 +12,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import CompressedImage, LaserScan
+from rclpy.qos import qos_profile_sensor_data
 
 # --- MediaPipe Tasks (Object Detector) ---
 from mediapipe.tasks import python as mp_python
@@ -23,7 +24,7 @@ class CameraFeedReceiver(Node):
         super().__init__('camerafeed_receiver_node')
 
         # ---------------- Configuration (editable) ----------------
-        self.model_path   = 'efficientdet_lite0.tflite' # model file path
+        self.model_path   = 'src/camerafeed_receiver/camerafeed_receiver/efficientdet_lite0.tflite' # model file path
         self.allowlist    = ['bottle']                  # restrict to trash classes (only bottle)
         self.score_on     = 0.50                        # hysteresis ON threshold
         self.score_off    = 0.35                        # hysteresis OFF threshold
@@ -68,7 +69,7 @@ class CameraFeedReceiver(Node):
             LaserScan,
             '/scan',
             self.scan_callback,
-            10)
+            qos_profile_sensor_data)
         self.get_logger().info('Subscribed to /scan for LiDAR test output...')
 
 # ==============================================================================================================================
