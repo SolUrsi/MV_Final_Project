@@ -1,7 +1,7 @@
 
 # GestureBot ROS 2 Project 
 
-This project utilizes ROS 2 Humble within a Docker container to host a gesture detection node that controls a simulated or physical TurtleBot3 Waffle Pi robot (hopefully).
+This project utilizes ROS 2 Humble within a Docker container to host a gesture detection node that controls a simulated or physical TurtleBot3 Waffle Pi robot.
 
 ## Prerequisites :shipit:
 
@@ -13,12 +13,13 @@ This project utilizes ROS 2 Humble within a Docker container to host a gesture d
 
 3. __Project Structure__: Ensure your local workspace folder (`gesturebot_ws`) is in the same directory as the `Dockerfile` and `docker-compose.yaml` file.
     * This should already be preset as part of cloning the repository
-4. __Robot__: For physical testing the TurtleBot3 SBC (Single Board Computer), the Raspberry Pi, must be powered on and connected to the same local network as the host machine running this code.
-    * Ensure ROS2 Humble is installed on the TurtleBot and that the TurtleBot ROS2 envrionments match the Docker Compose envrionments:
+
+4. __Robot__: For physical testing the TurtleBot3's SBC (Single Board Computer), the Raspberry Pi 4, must be powered on and connected to the same local network as the host machine running this code.
+    * Ensure ROS2 Humble is installed on the TurtleBot and that the TurtleBot ROS2 environments match the Docker Compose environments:
         - ROS_DOMAIN_ID=30
         - TURTLEBOT3_MODEL=waffle_pi
 
-## Setting up TurtleBot3 instructions
+## Setting up TurtleBot3 :robot:
 
 To control the physical robot, the TurtleBot3's Single Board Computer (SBC) must be configured to receive the commands published by your container.
 
@@ -37,7 +38,7 @@ export TURTLEBOT3_MODEL=waffle_pi
 source /opt/ros/humble/setup.bash
 source ~/turtlebot3_ws/install/setup.bash
 
-# Remember to disable the firewall to allow UDP packet discovery
+# Remember to disable the firewall to allow UDP packet discovery and shipping
 sudo ufw disable
 
 ```
@@ -48,67 +49,71 @@ sudo ufw disable
 ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
 ```
 
+4. __Launch Robot Camerafeed__: Run the ROS2 Camera node to enable the camera topic needed to receive the camerafeed:
+```bash
+ros2 run camera_ros camera_node --ros-args \
+  -p role:=video \
+  -p sensor_mode:=1640:1232 \
+  -p width:=640 -p height:=480 \
+  -p format:=YUYV
+```
+
 ## Running project instructions ✔️
 
 1. ```bash
-    # cd into the cloned repo
+    # Move into the cloned repo
     cd MV_Final_Project/
-    # build and start container
-    # Building the container is a resource heavy process,
-    # Terminate all other programs and give the building stage time to finish
-    # After building it once a majority of packages will be cached, reducing time needed
+    # Build and start container:
+    # -- Building the container is a resource heavy process,
+    # -- Terminate all other programs and give the building stage time to finish
+    # -- After building it once a majority of packages will be cached, reducing time needed to rebuild
     sudo docker compose build && sudo docker compose up -d
 
-    # Remember to disable the firewall to allow UDP packets to be sent
+    # Remember to disable the firewall to allow UDP packets to be sent and discovered
     sudo ufw disable
     ```
+
 2. ```bash
+    # Ecec into the running docker environment
     sudo docker compose exec gesturebot bash
     ```
 
-### What do these commands do?
-
-1. Builds (or rebuilds) the Docker Image service defined in the Docker Compose file, then pulls the image into the compose commands and starts the container. `-d` makes the container run in a detached mode, making it run in the background instead of taking up the entire terminal. To check the running services use `sudo docker compose ps` or to follow the output logs use `sudo docker compose logs`. 
-
-3. This command is used to run a specific command inside a running container managed by Docker Compose. This activates an interactive shell from within the running container which can run ROS2 commands. 
-
-## Run commands from project Docker Image 🤖 
+## Run commands from project Docker Image :checklist: 
 
 ```bash
-# make sure that you're in ~/gesturebot_ws/ when running these commands
+# Make sure that you're in ~/gesturebot_ws/ when running these commands
 rosdep update
 rosdep install --from-paths src -i -y && colcon build --symlink-install
 source install/setup.bash
 ```
 
-This will source the necessary setup scripts to allow the gesture detector to run.
+This will source the necessary setup scripts to allow the gesture detector to run:
 
 ```bash
 ros2 run gesture_detector gesture_detector
 ```
 
-This will start the actual python script and (hopefully) open your webcam. To view the robots camerafeed, input the following 📷:
+Remember to create a new terminal, exec into it and source the container environment anew.
+Then run the Camerafeed Receiver :camera::
 
 ```bash
 ros2 run camerafeed_receiver camerafeed_receiver.py
 ```
 
-Enjoy! See the report for the gesture mapping!
+Enjoy! See the report for gesture mapping to see what gestures allow for robot movement :arrow:!
 
-### Problems? ✖️
+### Problems? :red_exclamation_mark:
 
-If you're running the application through WSL or other virtual machine or environments, make sure the webcam is exposed to the application!
+Currently it's not possible to run the webcam gesture detector through WSL2 likely due to V4L2 driver issues. Please utilize a Ubuntu 22.04 LTS computer to run the gesture detector!
+Make sure to run the robot and the controlling computer over a hotspot network if UDP packets are cleansed from an official Wi-Fi network! :signal:
 
-- ___WSL2___: Make sure to expose the webcam to WSL by following the steps in this link: [USBIPD](https://learn.microsoft.com/en-us/windows/wsl/connect-usb).
 
-Currently it's not possible to run the webcam gesture detector through WSL2 likely due to V4L2 driver issues. Please utilize a Ubuntu 22.04 LTS computer to run the gesture detector! ❗
-
-## Finished?
+## Finished :cross:
 
 Simply run the following to shut down the container:
 
 ```bash
-# make sure to exit the container shell using `ctrl+d` or typing `exit`
+# Make sure to exit the container shell using `ctrl+d` or typing `exit`
 sudo docker compose down
 ```
 
