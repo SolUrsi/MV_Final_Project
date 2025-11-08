@@ -114,7 +114,6 @@ class CameraFeedReceiver(Node):
             qos_profile_sensor_data)
         self.get_logger().info('Subscribed to /scan for LiDAR test output...')
 
-
     # ---------- tiny helpers (object detection) ----------
     def _ema(self, prev, cur, alpha):
         """Simple exponential moving average over a tuple."""
@@ -134,51 +133,48 @@ class CameraFeedReceiver(Node):
         if abs(cx - px) < self.deadband: cx = px
         if abs(cy - py) < self.deadband: cy = py
         return (cx, cy, bw, bh, s)
-
     
     # ---------- tiny helpers (LiDAR) ----------
     def scan_callback(self, msg: LaserScan):
         # keep latest scan
         self.last_scan = msg
-
-    @staticmethod
-    def _wrap_to_pi(a):
-        # normalize angle to (-pi, pi)
-        return math.atan2(math.sin(a), math.cos(a))
     
     def _distance_for_angle(self, angle_rad):
         """
-        Map a target angle (rad, camera-based) to LaserScan indices and
+        Map a camera-based target angle (rad) to LaserScan indices and
         return a robust distance in meters (or None if no valid data).
+
+        Works with LiDAR scans that start at 0 rad (0°) and end near 2*pi rad (359°)
+        (TurtleBot3 LDS default, clockwise increment).
         """
         scan = self.last_scan
         if scan is None or not scan.ranges:
             return None
 
-        # Combine camera angle with boresight offset
+        # --- combine camera angle with boresight offset ---
         theta = angle_rad + math.radians(self.lidar_boresight_deg)
-        # Normalize into scan's domain (usually [-pi, +pi])
-        theta = self._wrap_to_pi(theta)
 
-        a0 = scan.angle_min
-        inc = scan.angle_increment
-        N  = len(scan.ranges)
+        # Wrap to [0, 2*pi)
+        two_pi = 2.0 * math.pi
+        theta = theta % two_pi
 
-        # If scan doesn’t exactly cover [-pi,pi], clamp into [a0, a0+inc*(N-1)]
-        a1 = a0 + inc*(N-1)
-        # Option 1: compute raw index, then modulo wrap
-        idx = int(round((theta - a0) / inc))
-        idx_mod = (idx % N)
+        # --- read scan geometry ---
+        a0  = scan.angle_min               # usually 0.0
+        inc = scan.angle_increment         # ≈ +1° in rad
+        N   = len(scan.ranges)
+        a1  = a0 + inc * N                 # should be close to 2*pi
 
-        # Build a small window
-        half_w = int(round(abs(self.lidar_window_deg) / math.degrees(inc)))  # in indices
-        i_min = max(0, idx_mod - half_w)
-        i_max = min(N-1, idx_mod + half_w)
+        # --- convert to scan index ---
+        idx = int(round((theta - a0) / inc)) % N
 
-        # Gather valid distances
+        # --- build local window (± lidar_window_deg) ---
+        inc_deg = abs(inc) * 180.0 / math.pi
+        half_w = max(0, int(round(abs(self.lidar_window_deg) / max(1e-6, inc_deg))))
+
         vals = []
         rmin, rmax = scan.range_min, scan.range_max
-        for i in range(i_min, i_max+1):
+        for di in range(-half_w, half_w + 1):
+            i = (idx + di) % N
             r = scan.ranges[i]
             if math.isfinite(r) and (rmin < r < rmax):
                 vals.append(r)
@@ -186,11 +182,10 @@ class CameraFeedReceiver(Node):
         if not vals:
             return None
 
-        # Robust distance (percentile)
+        # --- robust percentile distance ---
         vals.sort()
-        k = int(round((self.lidar_pct/100.0) * (len(vals)-1)))
+        k = int(round((self.lidar_pct / 100.0) * (len(vals) - 1)))
         return float(vals[k])
-
 
     # ---------- main callback ----------
     def listener_callback(self, msg):
@@ -276,8 +271,11 @@ class CameraFeedReceiver(Node):
             angle_rad = x_norm * half_fov
             angle_deg = math.degrees(angle_rad)
 
-            # --- NEW: query LiDAR distance at this angle ---
-            rng_m = self._distance_for_angle(angle_rad)  # meters or None
+            # Convert to 0–360° clockwise convention
+            angle_deg_cw = (360.0 - angle_deg) % 360.0
+
+            # --- query LiDAR distance at this angle ---
+            rng_m = self._distance_for_angle(angle_rad)
             if rng_m is None:
                 dist_text = "--- cm"
             else:
@@ -287,14 +285,15 @@ class CameraFeedReceiver(Node):
             in_corridor = (xL <= int(cx * W) <= xR)
             color = (0, 255, 0) if in_corridor else (0, 200, 255)
 
-            # draw box (no label text)
+            # draw box
             cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
 
-            # multi-line HUD (score, orientation, distance to object)
+            # --- dark multi-line HUD (always visible)
+            hud_color = (30, 30, 30)
             hud_lines = [
                 "Object detected",
                 f"  - score: {score:.2f}",
-                f"  - orientation: {angle_deg:+.1f} deg",
+                f"  - orientation: {angle_deg_cw:+.1f} deg",
                 f"  - distance: {dist_text}",
             ]
             y = 18
@@ -302,12 +301,12 @@ class CameraFeedReceiver(Node):
                 fs = 0.6 if i == 0 else 0.45
                 th = 2   if i == 0 else 1
                 cv2.putText(frame, line, (10, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, fs, color, th)
+                            cv2.FONT_HERSHEY_SIMPLEX, fs, hud_color, th)
                 y += (22 if i == 0 else 18)
         else:
             if self.show_no_target:
                 cv2.putText(frame, "no target", (10, 22),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 200, 255), 2)
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, hud_color, 2)
                 
         cv2.imshow("Camerafeed (Object Detection)", frame)
         cv2.waitKey(1)
