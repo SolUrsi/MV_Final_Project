@@ -4,7 +4,7 @@ SHELL ["/bin/bash", "-c"]
 
 ARG USERNAME=robo
 
-ENV ROS_DOMAIN_ID=31
+ENV ROS_DOMAIN_ID=30
 ENV TURTLEBOT3_MODEL=waffle_pi
 # ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
@@ -34,6 +34,7 @@ RUN apt install x11-utils -y
 RUN apt install mesa-utils -y
 RUN apt install python3-pip -y
 RUN apt install git -y
+RUN apt install python3-opencv -y
 
 # User
 
@@ -82,7 +83,7 @@ RUN cd ~/turtlebot3_ws \
 
 # turtlebot3 manipulation Setup
 
-RUN sudo apt install ros-humble-dynamixel-sdk ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-gripper-controllers ros-humble-moveit* -y
+RUN sudo apt update -y && sudo apt install ros-humble-dynamixel-sdk ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-gripper-controllers ros-humble-moveit* -y
 RUN cd ~/turtlebot3_ws/src/ \
     && source /opt/ros/humble/setup.bash \
     && git clone -b humble-devel https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git \
@@ -100,3 +101,5 @@ RUN echo 'source /opt/ros/humble/setup.bash' >> ~/.bashrc
 WORKDIR /home/$USERNAME/$PROJECT_PATH
 
 CMD /bin/bash -c "cd ~/$PROJECT_PATH && rosdep init ; rosdep update && rosdep install --from-paths src -i -y && colcon build --symlink-install ; source install/setup.bash ; /bin/bash -i"
+
+
