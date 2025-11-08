@@ -78,7 +78,7 @@ ros2 run camera_ros camera_node --ros-args \
     sudo docker compose exec gesturebot bash
     ```
 
-## Run commands from project Docker Image :checklist: 
+## Run commands from project Docker Image 🐳
 
 ```bash
 # Make sure that you're in ~/gesturebot_ws/ when running these commands
@@ -94,21 +94,21 @@ ros2 run gesture_detector gesture_detector
 ```
 
 Remember to create a new terminal, exec into it and source the container environment anew.
-Then run the Camerafeed Receiver :camera::
+Then run the Camerafeed Receiver 📷:
 
 ```bash
 ros2 run camerafeed_receiver camerafeed_receiver.py
 ```
 
-Enjoy! See the report for gesture mapping to see what gestures allow for robot movement :arrow:!
+Enjoy! See the report for gesture mapping to see what gestures allow for robot movement ⬆️!
 
-### Problems? :red_exclamation_mark:
+### Problems? ❗
 
-Currently it's not possible to run the webcam gesture detector through WSL2 likely due to V4L2 driver issues. Please utilize a Ubuntu 22.04 LTS computer to run the gesture detector!
-Make sure to run the robot and the controlling computer over a hotspot network if UDP packets are cleansed from an official Wi-Fi network! :signal:
+Currently it's not possible to run the webcam gesture detector through WSL2 likely due to V4L2 driver issues. Please utilize a Ubuntu 22.04 LTS computer to run the gesture detector! 💻
+Make sure to run the robot and the controlling computer over a hotspot network if UDP packets are cleansed from an official Wi-Fi network! 📶
 
 
-## Finished :cross:
+## Finished 🏁
 
 Simply run the following to shut down the container:
 
