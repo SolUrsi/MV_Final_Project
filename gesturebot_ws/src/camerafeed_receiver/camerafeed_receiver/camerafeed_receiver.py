@@ -1,11 +1,49 @@
 #!/usr/bin/env python3
 """
-ROS2 viewer node with simple object detection overlay.
+ROS2 viewer node with real-time object detection and LiDAR distance fusion.
 - Subscribes to /camera/image_raw/compressed (JPEG)
 - Runs MediaPipe Object Detector (allowlist=['bottle'])
-- Stabilizes bbox (small-box reject + deadband + EMA)
-- Draws guide lines, box, and a minimal HUD (score, orientation, distance placeholder)
+- Stabilizes bounding box (small-box reject + deadband + EMA smoothing)
+- Draws guide lines, bounding box, and HUD (score, orientation, LiDAR-based distance)
+- Fuses camera detections with /scan data to estimate target range at detected bearing.
+
+Camera Module Information (Raspberry Pi Camera V2.1, Sony IMX219):
+- Sensor: 8 MP (3280 x 2464 active pixels)
+- Pixel size: 1.12 µm x 1.12 µm
+- Sensor size: 3.674 mm (H) x 2.760 mm (V)
+- Focal length: 3.04 mm
+- Aperture: F/2.0
+- Field of View (full sensor readout): 62.2° horizontal, 48.8° vertical
+- Video stream modes: 1080p30 (1920x1080), 720p60 (1280x720), 640x480p90
+  *These modes are cropped sections of the sensor (reduced field of view).*
+
+  Sources:
+  - https://www.waveshare.com/rpi-camera-v2.htm
+  - https://www.opensourceinstruments.com/Electronics/Data/IMX219PQ.pdf
 """
+
+# --------------------------------------------------------------------------
+# FoV (Field of View) – Reference formulas
+#
+# (1) Full-Sensor FoV from physical geometry  [Pinhole camera model]
+#     FoV_full = 2 * atan( SensorWidth / (2 * FocalLength) )
+#         →  SensorWidth  = 3.674 mm  (RPi Camera V2, Sony IMX219)
+#         →  FocalLength  = 3.04 mm
+#         →  FoV_full_H ≈ 62.2° , FoV_full_V ≈ 48.8°
+#
+# (2) Effective FoV for cropped (partial) readout
+#     FoV_crop = 2 * atan( (Width_crop / Width_full) * tan(FoV_full / 2) )
+#
+# Notes:
+# - Applies only for *central crops* (true sensor cut-out, not scaled).
+# - For scaled (downsampled) full-sensor modes → FoV stays constant.
+# - Example (RPi V2, 62.2° full sensor):
+#       3280 px  → 62.2°   (full sensor)
+#       1640 px  → ~33.5°  (≈50% width)
+#       1280 px  → ~26.5°  (≈39% width)
+#       640 px   → ~13.4°  (≈20% width)
+# --------------------------------------------------------------------------
+
 import cv2, math, time
 import numpy as np
 
@@ -38,7 +76,7 @@ class CameraFeedReceiver(Node):
         self.show_no_target = False                     # keep HUD silent if no target
         self.lock_grace_s = 0.8                         # keep last box briefly on dropouts
         # --- LiDAR fusion config ---
-        self.lidar_boresight_deg = -2.5                  # camera - LiDAR alignment offset (deg)
+        self.lidar_boresight_deg = 0.0                  # camera - LiDAR alignment offset (deg)
         self.lidar_window_deg    = 3.0                  # window around angle (deg)
         self.lidar_pct           = 30                   # robust percentile
         self.last_scan           = None                 # stores latest LaserScan
@@ -68,8 +106,6 @@ class CameraFeedReceiver(Node):
                 10)
         self.get_logger().info('Camera Feed Receiver Node initialized...')
 
-# ==============================================================================================================================
-
         # Subscribe to LiDAR scan (for console test)
         self.scan_subscription = self.create_subscription(
             LaserScan,
@@ -78,7 +114,6 @@ class CameraFeedReceiver(Node):
             qos_profile_sensor_data)
         self.get_logger().info('Subscribed to /scan for LiDAR test output...')
 
-# ==============================================================================================================================
 
     # ---------- tiny helpers (object detection) ----------
     def _ema(self, prev, cur, alpha):
@@ -100,7 +135,6 @@ class CameraFeedReceiver(Node):
         if abs(cy - py) < self.deadband: cy = py
         return (cx, cy, bw, bh, s)
 
-# ==============================================================================================================================
     
     # ---------- tiny helpers (LiDAR) ----------
     def scan_callback(self, msg: LaserScan):
@@ -157,10 +191,6 @@ class CameraFeedReceiver(Node):
         k = int(round((self.lidar_pct/100.0) * (len(vals)-1)))
         return float(vals[k])
 
-# ==============================================================================================================================
-    
-# Scanner area
-# ==============================================================================================================================
 
     # ---------- main callback ----------
     def listener_callback(self, msg):
