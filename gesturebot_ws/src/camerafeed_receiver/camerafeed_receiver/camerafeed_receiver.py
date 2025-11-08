@@ -72,7 +72,7 @@ class CameraFeedReceiver(Node):
         self.min_bw       = 0.06                        # reject box width < 6% of frame
         self.min_bh       = 0.10                        # reject box height < 10% of frame
         self.fov_h_deg    = 62.2                        # Raspberry Pi Camera V2 horizontal FOV in degrees
-        self.guide_band   = 0.15                        # guide corridor ±15% around center
+        self.guide_band   = 0.05                        # guide corridor ±5% around center
         self.show_no_target = False                     # keep HUD silent if no target
         self.lock_grace_s = 0.8                         # keep last box briefly on dropouts
         # --- LiDAR fusion config ---
@@ -272,7 +272,7 @@ class CameraFeedReceiver(Node):
             angle_deg = math.degrees(angle_rad)
 
             # Convert to 0–360° clockwise convention
-            angle_deg_cw = (360.0 - angle_deg) % 360.0
+            angle_deg_cw = (360.0 + angle_deg) % 360.0
 
             # --- query LiDAR distance at this angle ---
             rng_m = self._distance_for_angle(angle_rad)
@@ -289,7 +289,7 @@ class CameraFeedReceiver(Node):
             cv2.rectangle(frame, (x0, y0), (x1, y1), color, 2)
 
             # --- dark multi-line HUD (always visible)
-            hud_color = (30, 30, 30)
+            hud_color = (0, 0, 240)
             hud_lines = [
                 "Object detected",
                 f"  - score: {score:.2f}",
