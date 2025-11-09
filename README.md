@@ -1,4 +1,5 @@
-# GestureBot ROS 2 Project
+
+# GestureBot ROS 2 Project 
 
 This project utilizes ROS 2 Humble within a Docker container to host a gesture detection node that controls a simulated or physical TurtleBot3 Waffle Pi robot.
 
@@ -6,22 +7,24 @@ This project utilizes ROS 2 Humble within a Docker container to host a gesture d
 
 1. __Docker & Docker Compose__: Must be installed and running on your host machine.
 
-   * Install docker from the official webpage by following their tutorials for your specific OS: [Docker Install](https://docs.docker.com/engine/install/).
+    * Install docker from the official webpage by following their tutorials for your specific OS: [Docker Install](https://docs.docker.com/engine/install/).
+
 2. __Clone project__: Clone the project repository to somewhere on your PC using `git clone https://github.com/corneliusbrandt/MV_Final_Project.git`
+
 3. __Project Structure__: Ensure your local workspace folder (`gesturebot_ws`) is in the same directory as the `Dockerfile` and `docker-compose.yaml` file.
+    * This should already be preset as part of cloning the repository
 
-   * This should already be preset as part of cloning the repository
 4. __Robot__: For physical testing the TurtleBot3's SBC (Single Board Computer), the Raspberry Pi 4, must be powered on and connected to the same local network as the host machine running this code.
+    * Ensure ROS2 Humble is installed on the TurtleBot and that the TurtleBot ROS2 environments match the Docker Compose environments:
+        - ROS_DOMAIN_ID=30
+        - TURTLEBOT3_MODEL=waffle_pi
 
-   * Ensure ROS2 Humble is installed on the TurtleBot and that the TurtleBot ROS2 environments match the Docker Compose environments:
-     - ROS_DOMAIN_ID=30
-     - TURTLEBOT3_MODEL=waffle_pi
-
-## Setting up TurtleBot3 🤖
+## Setting up TurtleBot3 :robot:
 
 To control the physical robot, the TurtleBot3's Single Board Computer (SBC) must be configured to receive the commands published by your container.
 
 1. __Ensure the robot and the application host machine are on the same network!__
+
 2. __Environment setup__: Log into the robot (e.g., via SSH) and ensure the ROS Domain ID matches the container:
 
 ```bash
@@ -47,7 +50,6 @@ ros2 launch turtlebot3_manipulation_bringup hardware.launch.py
 ```
 
 4. __Launch Robot Camerafeed__: Run the ROS2 Camera node to enable the camera topic needed to receive the camerafeed:
-
 ```bash
 ros2 run camera_ros camera_node --ros-args \
   -p role:=video \
@@ -69,16 +71,17 @@ ros2 run camera_ros camera_node --ros-args \
 
     # Remember to disable the firewall to allow UDP packets to be sent and discovered
     sudo ufw disable
-   ```
+    ```
+
 2. ```bash
     # Exec into the running docker environment
     sudo docker compose exec gesturebot bash
-   ```
+    ```
 
 ## Run commands from project Docker Image 🐳
 
 ```bash
- Make sure that you're in ~/gesturebot_ws/ when running these commands
+# Make sure that you're in ~/gesturebot_ws/ when running these commands
 rosdep update
 rosdep install --from-paths src -i -y && colcon build --symlink-install
 source install/setup.bash
@@ -105,6 +108,7 @@ Currently it's not possible to run the webcam gesture detector through WSL2 like
 
 Make sure to run the robot and the controlling computer over a hotspot network if UDP packets are cleansed from an official Wi-Fi network! 📶
 
+
 ## Finished 🏁
 
 Simply run the following to shut down the container:
@@ -113,3 +117,4 @@ Simply run the following to shut down the container:
 # Make sure to first exit the container shell using `ctrl+d` or typing `exit`
 sudo docker compose down
 ```
+
