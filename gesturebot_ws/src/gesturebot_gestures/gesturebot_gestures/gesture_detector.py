@@ -139,7 +139,7 @@ class GestureDetector(Node):
 
             frame = cv2.flip(frame, 1)
             h, w, _ = frame.shape
-            center_x, center_y = int((3 / 5) * w), h // 2
+            center_x, center_y = int((2 / 5) * w), h // 2
 
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             result = self.hands.process(rgb)
