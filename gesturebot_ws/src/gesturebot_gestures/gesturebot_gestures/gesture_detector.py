@@ -229,14 +229,14 @@ class GestureDetector(Node):
                     else:
                         raise ValueError("HANDEDNESS IS NOT LEFT OR RIGHT")
 
-                    self.vel_publisher.publish(vel_msg)
-
                     self.get_logger().info(
                         f"x={robot_x:.2f}m, y={robot_y:.2f}m, z={robot_z:.2f}m, closure={gripper_closure}, direction={direction}"
                     )
                     self.mp_drawing.draw_landmarks(
                         frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS
                     )
+
+            self.vel_publisher.publish(vel_msg)
 
             cv2.imshow("MediaPipe Hands", frame)
 
