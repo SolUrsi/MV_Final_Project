@@ -87,7 +87,7 @@ rosdep install --from-paths src -i -y && colcon build --symlink-install
 source install/setup.bash
 ```
 
-This will source the necessary setup scripts to allow the gesture detector to run:
+This will source the necessary setup scripts to allow the Gesture Detector to run:
 
 ```bash
 ros2 run gesture_detector gesture_detector
