@@ -132,13 +132,13 @@ class GestureDetector(Node):
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             result = self.hands.process(rgb)
 
+            direction = Direction.STOP
+            vel_msg = Twist()
+
             if result.multi_hand_landmarks:
                 for i, hand_landmarks in enumerate(result.multi_hand_landmarks):
                     handedness = result.multi_handedness[i].classification[0].label
                     score = result.multi_handedness[i].classification[0].score
-
-                    vel_msg = Twist()
-                    direction = Direction.STOP
 
                     if handedness == "Right":
                         gripper_closure = self.hand_closure_ratio(
@@ -187,8 +187,8 @@ class GestureDetector(Node):
                         cv2.circle(frame, (center_x, center_y), 5, (0, 0, 255), -1)
                     elif handedness == "Left":
                         direction = self.detect_commands(hand_landmarks)
-                        dir_maj_window.append(direction)
 
+                        dir_maj_window.append(direction)
                         direction = Counter(dir_maj_window).most_common(1)[0][0]
 
                         if direction == Direction.FORWARD:

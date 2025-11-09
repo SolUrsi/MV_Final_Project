@@ -80,6 +80,8 @@ ros2 run camera_ros camera_node --ros-args \
 
 ## Run commands from project Docker Image 🐳
 
+This will source the necessary setup scripts
+
 ```bash
 # Make sure that you're in ~/gesturebot_ws/ when running these commands
 rosdep update
@@ -87,10 +89,16 @@ rosdep install --from-paths src -i -y && colcon build --symlink-install
 source install/setup.bash
 ```
 
-This will source the necessary setup scripts to allow the Gesture Detector to run:
+Launch gesture detector and manipulation handler
 
 ```bash
 ros2 launch gesturebot_launch gesturebot.launch.py use_sim_time:=False
+```
+
+To run everything in gazebo (simulation) instead do:
+
+```bash
+ros2 launch gesturebot_launch gesturebot.launch.py use_sim_time:=True
 ```
 
 Remember to create a new terminal, exec into it and source the container environment anew.
