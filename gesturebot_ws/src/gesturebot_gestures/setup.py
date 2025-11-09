@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'gesture_detector'
+package_name = 'gesturebot_gestures'
 
 setup(
     name=package_name,
@@ -20,7 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'gesture_detector = gesture_detector.gesture_detector:main',
+            'gesture_detector = gesturebot_gestures.gesture_detector:main',
         ],
     },
 )

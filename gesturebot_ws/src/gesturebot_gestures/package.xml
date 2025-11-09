@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-    <name>gesture_detector</name>
+    <name>gesturebot_gestures</name>
     <version>0.0.0</version>
     <description>A package to detect hand gestures used to control a robot</description>
     <maintainer email="fynns@uia.no">fynns</maintainer>
@@ -12,6 +12,7 @@
     <exec_depend>python3-opencv</exec_depend>
 
     <exec_depend>geometry_msgs</exec_depend>
+    <exec_depend>gesturebot_msgs</exec_depend>
     <exec_depend>rclpy</exec_depend>
     <exec_depend>std_msgs</exec_depend>
 

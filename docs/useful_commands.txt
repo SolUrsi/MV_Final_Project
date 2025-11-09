@@ -62,5 +62,8 @@ ros2 launch turtlebot3_manipulation_navigation2 navigation2.launch.py map_yaml_f
 # Download dependencies using rosdep 
 rosdep install --from-paths src -i -y
 
-#sudo Password
+# sudo Password
 masterEE
+
+# send arm pose 
+ros2 topic pub --once /arm_motion gesturebot_msgs/msg/ArmCommand "{target_pose: {position: {x: 0.25, y: 0.0, z: 0.2}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}}"

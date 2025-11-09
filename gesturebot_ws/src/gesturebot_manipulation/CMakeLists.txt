@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(motion_handler)
+project(gesturebot_manipulation)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,33 +7,40 @@ endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(control_msgs REQUIRED)
-find_package(geometry_msgs REQUIRED)
+find_package(fmt REQUIRED)
+find_package(gesturebot_msgs REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/MotionCommand.msg"
-  DEPENDENCIES geometry_msgs
-)
-ament_export_dependencies(rosidl_default_runtime)
-
-add_executable(publisher src/publisher.cpp)
-ament_target_dependencies(publisher 
+add_executable(manipulation_handler src/manipulation_handler.cpp)
+ament_target_dependencies(manipulation_handler 
     control_msgs
-    geometry_msgs
+    gesturebot_msgs
     moveit_ros_planning_interface
     rclcpp 
     std_msgs 
+    tf2
+    tf2_geometry_msgs
 )
+target_link_libraries(manipulation_handler fmt::fmt)
+install(TARGETS manipulation_handler DESTINATION lib/${PROJECT_NAME})
 
-rosidl_target_interfaces(publisher
-  ${PROJECT_NAME} "rosidl_typesupport_cpp"
+add_executable(test_node src/test_node.cpp)
+ament_target_dependencies(test_node 
+    control_msgs
+    gesturebot_msgs
+    moveit_ros_planning_interface
+    rclcpp 
+    std_msgs 
+    tf2
+    tf2_geometry_msgs
 )
+install(TARGETS test_node DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -46,9 +53,5 @@ if(BUILD_TESTING)
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
-
-install(TARGETS
-  publisher
-  DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
