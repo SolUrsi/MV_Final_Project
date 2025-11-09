@@ -1,3 +1,4 @@
+import time
 from collections import Counter, deque
 from enum import Enum
 
@@ -19,16 +20,23 @@ class Direction(Enum):
     BACKWARD = 5
 
 
+R_x = np.array([[1, 0, 0], [0, 0, -1], [0, 1, 0]])
+
+R_y = np.array([[0, 0, 1], [0, 1, 0], [-1, 0, 0]])
+
+R_z = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+
+
 class GestureDetector(Node):
 
     def __init__(self):
         super().__init__("gesture_detector")
 
-        self.vel_publisher = self.create_publisher(Twist, "cmd_vel", 10)
+        self.vel_publisher = self.create_publisher(Twist, "cmd_vel", 5)
         self.gripper_publisher = self.create_publisher(
-            GripperCommand, "gripper_motion", 10
+            GripperCommand, "gripper_motion", 5
         )
-        self.arm_publisher = self.create_publisher(ArmCommand, "arm_motion", 10)
+        self.arm_publisher = self.create_publisher(ArmCommand, "arm_motion", 5)
 
         self.mp_hands = mp.solutions.hands
         self.mp_drawing = mp.solutions.drawing_utils
@@ -90,14 +98,14 @@ class GestureDetector(Node):
         # [thumb, index, middle, ring, pinky]
         if fingers == [0, 1, 0, 0, 0]:
             direction = Direction.FORWARD
+        elif fingers == [0, 0, 0, 0, 0]:
+            direction = Direction.STOP
         elif fingers == [0, 1, 1, 1, 1]:
             direction = Direction.LEFT
         elif fingers == [1, 0, 0, 0, 0]:
             direction = Direction.RIGHT
         elif fingers == [0, 1, 1, 0, 0]:
             direction = Direction.BACKWARD
-        elif fingers == [0, 0, 0, 0, 0]:
-            direction = Direction.STOP
 
         return direction
 
@@ -110,14 +118,18 @@ class GestureDetector(Node):
 
         robot_x = 0
         robot_y = 0
+        robot_z = 0
         gripper_closure = 0
 
-        alpha = 0.2
+        alpha = 0.8
         alpha_gripper = 0.2
 
         dir_maj_window = deque(maxlen=3)
 
         cap = cv2.VideoCapture(0)
+
+        last_arm_pub_time = 0
+        arm_pub_hz = 2
 
         while cap.isOpened():
             success, frame = cap.read()
@@ -127,20 +139,20 @@ class GestureDetector(Node):
 
             frame = cv2.flip(frame, 1)
             h, w, _ = frame.shape
-            center_x, center_y = int((3 / 4) * w), h // 2
+            center_x, center_y = int((3 / 5) * w), h // 2
 
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             result = self.hands.process(rgb)
 
-            direction = Direction.STOP
             vel_msg = Twist()
+            direction = Direction.STOP
 
             if result.multi_hand_landmarks:
                 for i, hand_landmarks in enumerate(result.multi_hand_landmarks):
                     handedness = result.multi_handedness[i].classification[0].label
                     score = result.multi_handedness[i].classification[0].score
 
-                    if handedness == "Right":
+                    if handedness == "Left":
                         gripper_closure = self.hand_closure_ratio(
                             hand_landmarks.landmark
                         )
@@ -163,38 +175,51 @@ class GestureDetector(Node):
                         pixel_x = int(lm.x * w)
                         pixel_y = int(lm.y * h)
 
-                        rel_x = (pixel_x - center_x) * PIXEL_TO_M
-                        rel_y = (center_y - pixel_y) * PIXEL_TO_M
+                        now = time.time()
+                        time_diff = now - last_arm_pub_time
+                        if time_diff >= 1 / arm_pub_hz:
+                            rel_x = (pixel_x - center_x) * PIXEL_TO_M
+                            rel_y = (center_y - pixel_y) * PIXEL_TO_M
 
-                        robot_x = rel_y
-                        robot_y = -rel_x
+                            robot_x = rel_y
+                            robot_y = -rel_x
+                            robot_z = 0.3
+                            robot_z = max(0, robot_z)
 
-                        if prev_x:
-                            robot_x = alpha * robot_x + (1 - alpha) * prev_x
-                        prev_x = robot_x
+                            if prev_x:
+                                robot_x = alpha * robot_x + (1 - alpha) * prev_x
+                            prev_x = robot_x
 
-                        if prev_y:
-                            robot_y = alpha * robot_y + (1 - alpha) * prev_y
-                        prev_y = robot_y
+                            if prev_y:
+                                robot_y = alpha * robot_y + (1 - alpha) * prev_y
+                            prev_y = robot_y
 
-                        arm_msg = ArmCommand()
-                        arm_msg.target_pose.position.x = robot_x
-                        arm_msg.target_pose.position.y = robot_y
-                        arm_msg.target_pose.position.z = 0.2
-                        self.arm_publisher.publish(arm_msg)
+                            robot_coords = np.array([robot_x, robot_y, robot_z])
+                            # robot_coords = R_z @ robot_coords
+
+                            if robot_coords[0] > 0:
+                                arm_msg = ArmCommand()
+                                arm_msg.target_pose.position.x = robot_coords[0]
+                                arm_msg.target_pose.position.y = robot_coords[1]
+                                arm_msg.target_pose.position.z = robot_coords[2]
+                                self.arm_publisher.publish(arm_msg)
+
+                                last_arm_pub_time = now
+
+                            robot_x = robot_coords[0]
+                            robot_y = robot_coords[1]
+                            robot_z = robot_coords[2]
 
                         cv2.circle(frame, (pixel_x, pixel_y), 8, (0, 255, 0), -1)
                         cv2.circle(frame, (center_x, center_y), 5, (0, 0, 255), -1)
-                    elif handedness == "Left":
+                    elif handedness == "Right":
                         direction = self.detect_commands(hand_landmarks)
-
                         dir_maj_window.append(direction)
+
                         direction = Counter(dir_maj_window).most_common(1)[0][0]
 
                         if direction == Direction.FORWARD:
                             vel_msg.linear.x = 0.15
-                        elif direction == Direction.STOP:
-                            vel_msg.linear.x = 0.0
                         elif direction == Direction.LEFT:
                             vel_msg.angular.z = 0.5
                         elif direction == Direction.RIGHT:
@@ -202,12 +227,12 @@ class GestureDetector(Node):
                         elif direction == Direction.BACKWARD:
                             vel_msg.linear.x = -0.15
                     else:
-                        pass
+                        raise ValueError("HANDEDNESS IS NOT LEFT OR RIGHT")
 
                     self.vel_publisher.publish(vel_msg)
 
                     self.get_logger().info(
-                        f"x={robot_x:.2f}m, y={robot_y:.2f}m, closure={gripper_closure}, direction={direction}"
+                        f"x={robot_x:.2f}m, y={robot_y:.2f}m, z={robot_z:.2f}m, closure={gripper_closure}, direction={direction}"
                     )
                     self.mp_drawing.draw_landmarks(
                         frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS
